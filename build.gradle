@@ -1,0 +1,18 @@
+plugins {
+    id 'java'
+    id 'idea'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation files("libs/lwjgl.jar")
+    implementation files("libs/lwjgl-assimp.jar")
+    implementation files("libs/lwjgl-glfw.jar")
+    implementation files("libs/lwjgl-openal.jar")
+    implementation files("libs/lwjgl-opengl.jar")
+    implementation files("libs/lwjgl-stb.jar")
+    implementation files("libs/joml-1.10.4.jar")
+}
