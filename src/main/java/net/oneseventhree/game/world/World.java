@@ -1,19 +1,11 @@
 package net.oneseventhree.game.world;
 
 import net.oneseventhree.game.graphics.render.Renderer;
+import org.joml.Matrix4f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
-import org.lwjgl.BufferUtils;
-
-import java.nio.FloatBuffer;
-import java.util.ArrayList;
 import java.util.HashMap;
-
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.glDisableVertexAttribArray;
-import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
-import static org.lwjgl.opengl.GL30.glBindVertexArray;
 
 public class World extends Renderer
 {
@@ -41,11 +33,10 @@ public class World extends Renderer
     {
         for (Chunk chunk : chunks.values())
         {
-            //glBindVertexArray(chunk.getMesh().getVaoId());
-            glEnableVertexAttribArray(0);
-            //glDrawArrays(GL_TRIANGLES, 0, chunk.getMesh().getVertexCount());
-            glDisableVertexAttribArray(0);
-            glBindVertexArray(0);
+            Vector3i iPos = chunk.getPosition();
+            Matrix4f worldMatrix = transform.getWorldMatrix(new Vector3f((float)iPos.x, (float)iPos.y, (float)iPos.z), new Vector3f(0, 0, 0), 1f);
+            game.getCurrentShader().setUniform("worldMatrix", worldMatrix);
+            chunk.getMesh().draw();
         }
     }
 }

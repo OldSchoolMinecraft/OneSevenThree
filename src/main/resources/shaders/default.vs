@@ -5,12 +5,12 @@ layout(location = 1) in vec2 inTextureCoord;
 
 out vec2 passTextureCoord;
 
-uniform mat4 projViewMatrix;
-uniform mat4 modelMatrix;
+uniform mat4 projectionMatrix;
+uniform mat4 worldMatrix;
 
 void main()
 {
-    gl_Position = projViewMatrix * modelMatrix * vec4(inVertexPosition, 1.0);
+    gl_Position = projectionMatrix * worldMatrix * vec4(inVertexPosition, 1.0);
 
     passTextureCoord = inTextureCoord;
 }

@@ -9,7 +9,7 @@ public class VoxelData
     public static int textureAtlasSizeInBlocks = 16;
     public static float normalizedBlockTextureSize = 1f / textureAtlasSizeInBlocks;
 
-    public static final float[][] voxelVerts = new float[][]
+    /*public static final float[][] voxelVerts = new float[][]
     {
         {0, 0, 0},
         {1, 0, 0},
@@ -19,6 +19,18 @@ public class VoxelData
         {1, 0, 1},
         {1, 1, 1},
         {0, 1, 1}
+    };*/
+
+    public static final Vector3f[] voxelVerts = new Vector3f[]
+    {
+        new Vector3f(0, 0, 0),
+        new Vector3f(1, 0, 0),
+        new Vector3f(1, 1, 0),
+        new Vector3f(0, 1, 0),
+        new Vector3f(0, 0, 1),
+        new Vector3f(1, 0, 1),
+        new Vector3f(1, 1, 1),
+        new Vector3f(0, 1, 1)
     };
 
     public static final Vector3f[] faceChecks = new Vector3f[]

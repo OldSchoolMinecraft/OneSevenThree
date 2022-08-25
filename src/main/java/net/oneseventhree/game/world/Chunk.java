@@ -1,7 +1,11 @@
 package net.oneseventhree.game.world;
 
 import net.oneseventhree.game.OneSevenThree;
+import net.oneseventhree.game.graphics.VoxelData;
 import net.oneseventhree.game.graphics.render.VertexBufferObject;
+import net.oneseventhree.game.graphics.utils.AABB;
+import net.oneseventhree.game.graphics.utils.IndexedMesh;
+import net.oneseventhree.game.graphics.utils.Vertex;
 import net.oneseventhree.game.util.PerlinNoise;
 import net.oneseventhree.game.world.biomes.BiomeBase;
 import net.oneseventhree.game.world.biomes.Plains;
@@ -9,23 +13,22 @@ import net.oneseventhree.game.world.blocks.Block;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
-
-import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
+import java.util.LinkedHashMap;
 
 public class Chunk
 {
-    public static final int CHUNK_WIDTH = 16, CHUNK_HEIGHT = 512;
+    public static final int CHUNK_WIDTH = 16, CHUNK_HEIGHT = 512, SIZE = 32;
 
     private Vector2i coords;
     private Vector3i position;
+    private int x_offset, y_offset, z_offset;
 
-    private VertexBufferObject vbo = new VertexBufferObject();
-    private FloatBuffer vertices;
+    private IndexedMesh mesh;
 
     private byte[][][] blocks;
 
@@ -37,12 +40,15 @@ public class Chunk
 
     public Chunk(Vector2i coord, boolean generateOnLoad)
     {
+        this.mesh = new IndexedMesh();
         this.coords = coord;
         this.blocks = new byte[CHUNK_WIDTH][CHUNK_HEIGHT][CHUNK_WIDTH];
         this.position = new Vector3i(coord.x * CHUNK_WIDTH, 0, coord.y * CHUNK_WIDTH);
         this.perlin = new PerlinNoise();
 
-        vertices = MemoryUtil.memAllocFloat(4096);
+        x_offset = position.x * SIZE;
+        y_offset = position.y * SIZE;
+        z_offset = position.z * SIZE;
 
         if (generateOnLoad)
         {
@@ -73,10 +79,15 @@ public class Chunk
 
     private void generateMesh()
     {
-        int vertexIndex = 0;
-        for (int z = 0; z < CHUNK_WIDTH; z++)
+        if (mesh != null)
         {
-            for (int y = 0; y < CHUNK_HEIGHT; y++)
+            mesh.destroy();
+            mesh = new IndexedMesh();
+        }
+
+        for (int y = 0; y < CHUNK_HEIGHT; y++)
+        {
+            for (int z = 0; z < CHUNK_WIDTH; z++)
             {
                 for (int x = 0; x < CHUNK_WIDTH; x++)
                 {
@@ -85,14 +96,82 @@ public class Chunk
                     Block block = Block.blocks[getBlockAt(pos)];
                     if (block == null) continue;
                     if (block.isSolid())
-                        vbo.uploadData(vbo.getID(), vertices, GL_STATIC_DRAW);
-                    //if (block.isSolid())
-                        //meshData[vertexIndex] = Arrays.asList((float)x, (float)y, (float)z);
-                        //addMeshData(new Vector3f(pos.x, pos.y, pos.z));
+                        generateMeshData(new Vector3f(x, y, z));
                 }
             }
         }
-        //mesh = new Mesh();
+    }
+
+    private boolean shouldRenderVoxel(Vector3f pos, boolean fluid)
+    {
+        Block block = Block.getBlock(getBlockAt(pos));
+        if (!isBlockInChunk(pos)) return false;
+        return block.isSolid() && (block.isFluid() || fluid);
+    }
+
+    private void generateMeshData(Vector3f pos)
+    {
+        Block block = Block.getBlock(getBlockAt(pos));
+        int vertexIndex = 0;
+        LinkedHashMap<Vertex, Integer> vertex2index = new LinkedHashMap<>();
+        ArrayList<Integer> indices = new ArrayList<>();
+
+        for (int side = 0; side < 6; side++)
+        {
+            if (!shouldRenderVoxel(pos.add(VoxelData.faceChecks[side]), block.isFluid()))
+            {
+                int x0 = Math.round(pos.x);
+                int x1 = Math.round(pos.x);
+                int z0 = Math.round(pos.z);
+                int z1 = Math.round(pos.z);
+                int xx = x1 - x0 + 1, zz = z1 - z0 + 1, yy = 1;
+                int red = 125, green = 60, blue = 75;
+
+                float[] vertices = AABB.SIDE.values[side].translate_and_expand(pos.x + x_offset, pos.y + y_offset, pos.z + z_offset, xx, yy, zz);
+
+                Integer index;
+
+                Vertex vertex0 = new Vertex(vertices[0], vertices[1], vertices[2], 0, 0, 0, 0, red, green, blue);
+                index = vertex2index.get(vertex0);
+                if (index == null)
+                {
+                    index = vertexIndex++;
+                    vertex2index.put(vertex0, index);
+                }
+                indices.add(index);
+                indices.add(vertex2index.get(vertex0));
+
+                Vertex vertex1 = new Vertex(vertices[3], vertices[4], vertices[5], 0, 0, 0, 0, red, green, blue);
+                index = vertex2index.get(vertex1);
+                if (index == null)
+                {
+                    index = vertexIndex++;
+                    vertex2index.put(vertex1, index);
+                }
+                indices.add(index);
+                indices.add(vertex2index.get(vertex1));
+
+                Vertex vertex2 = new Vertex(vertices[6], vertices[7], vertices[8], 0, 0, 0, 0, red, green, blue);
+                index = vertex2index.get(vertex2);
+                if (index == null)
+                {
+                    index = vertexIndex++;
+                    vertex2index.put(vertex2, index);
+                }
+                indices.add(index);
+                indices.add(vertex2index.get(vertex2));
+
+                Vertex vertex3 = new Vertex(vertices[9], vertices[10], vertices[11], 0, 0, 0, 0, red, green, blue);
+                index = vertex2index.get(vertex3);
+                if (index == null)
+                {
+                    index = vertexIndex++;
+                    vertex2index.put(vertex3, index);
+                }
+                indices.add(index);
+                indices.add(vertex2index.get(vertex3));
+            }
+        }
     }
 
     static float[] f(float[] first, float[] second) {
@@ -159,5 +238,15 @@ public class Chunk
     private boolean isBlockInChunk(Vector3f pos)
     {
         return isBlockInChunk(new Vector3i(Math.round(pos.x), Math.round(pos.y), Math.round(pos.z)));
+    }
+
+    public Vector3i getPosition()
+    {
+        return position;
+    }
+
+    public IndexedMesh getMesh()
+    {
+        return mesh;
     }
 }

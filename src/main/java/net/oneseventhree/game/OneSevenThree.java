@@ -1,8 +1,10 @@
 package net.oneseventhree.game;
 
 import net.oneseventhree.game.graphics.render.Renderer;
-import net.oneseventhree.game.graphics.shaders.GlobalShader;
+import net.oneseventhree.game.graphics.utils.Shader;
+import net.oneseventhree.game.graphics.utils.Transformation;
 import net.oneseventhree.game.world.World;
+import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
@@ -16,25 +18,34 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 
 public class OneSevenThree implements Runnable
 {
+    public static int WIDTH = 800, HEIGHT = 600;
+
     private static OneSevenThree _instance;
 
     private long window;
     private World world;
-    private GlobalShader globalShader;
+    private Shader currentShader;
     private ArrayList<Renderer> renderers;
+    private Transformation transform;
+    private Matrix4f projectionMatrix;
+    private float FOV = (float) Math.toRadians(70.0f);
+    private float Z_NEAR = 0.01f;
+    private float Z_FAR = 1000.f;
 
     public OneSevenThree()
     {
         _instance = this;
 
+        transform = new Transformation();
+        float aspectRatio = (float) WIDTH / HEIGHT;
+        projectionMatrix = new Matrix4f().perspective(FOV, aspectRatio, Z_NEAR, Z_FAR);
+
         world = new World();
-        globalShader = new GlobalShader();
         renderers = new ArrayList<>();
     }
 
     public void startGame()
     {
-        //globalShader.link();
         renderers.add(world);
         world.generateSomeChunks();
     }
@@ -46,15 +57,21 @@ public class OneSevenThree implements Runnable
 
     private void render()
     {
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glfwPollEvents();
+        glPushMatrix();
 
-        //globalShader.bind();
+        currentShader.bind();
+        Matrix4f projectionMatrix = transform.getProjectionMatrix(FOV, WIDTH, HEIGHT, Z_NEAR, Z_FAR);
+        currentShader.setUniform("projectionMatrix", projectionMatrix);
+
         for (Renderer renderer : renderers)
             renderer.render();
-        //globalShader.unbind();
 
+        currentShader.unbind();
+
+        glPopMatrix();
         glfwSwapBuffers(window);
-        glfwPollEvents();
     }
 
     private void reshape(long window, int w, int h)
@@ -75,7 +92,7 @@ public class OneSevenThree implements Runnable
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-        window = glfwCreateWindow(800, 600, "OneSevenThree", 0, 0);
+        window = glfwCreateWindow(WIDTH, HEIGHT, "OneSevenThree", 0, 0);
         if (window == 0)
         {
             glfwTerminate();
@@ -102,7 +119,13 @@ public class OneSevenThree implements Runnable
         glfwMakeContextCurrent(window);
         glfwSwapInterval(0);
         glfwShowWindow(window);
+        initGL();
+    }
+
+    private void initGL()
+    {
         GL.createCapabilities();
+        currentShader = new Shader("default");
     }
 
     public void run()
@@ -147,6 +170,21 @@ public class OneSevenThree implements Runnable
     public World getWorld()
     {
         return world;
+    }
+
+    public Shader getCurrentShader()
+    {
+        return currentShader;
+    }
+
+    public Transformation getTransform()
+    {
+        return transform;
+    }
+
+    public float onePixelSize()
+    {
+        return 2.0f / Math.min(WIDTH, HEIGHT);
     }
 
     public static OneSevenThree getInstance()
