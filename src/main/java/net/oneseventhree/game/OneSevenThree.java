@@ -1,14 +1,32 @@
 package net.oneseventhree.game;
 
+import de.matthiasmann.twl.utils.PNGDecoder;
+import imgui.ImGui;
+import imgui.ImGuiIO;
+import imgui.flag.ImGuiConfigFlags;
+import imgui.gl3.ImGuiImplGl3;
+import imgui.glfw.ImGuiImplGlfw;
+import net.oneseventhree.game.graphics.Camera;
+import net.oneseventhree.game.graphics.render.CubeRenderer;
 import net.oneseventhree.game.graphics.render.Renderer;
+import net.oneseventhree.game.graphics.ui.Debug;
+import net.oneseventhree.game.graphics.ui.ImGuiLayer;
 import net.oneseventhree.game.graphics.utils.Shader;
+import net.oneseventhree.game.graphics.utils.Texture;
 import net.oneseventhree.game.graphics.utils.Transformation;
+import net.oneseventhree.game.util.Input;
+import net.oneseventhree.game.util.MathUtils;
+import net.oneseventhree.game.world.Chunk;
 import net.oneseventhree.game.world.World;
 import org.joml.Matrix4f;
+import org.joml.Vector2i;
+import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.system.MemoryStack;
 
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 
@@ -18,70 +36,84 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 
 public class OneSevenThree implements Runnable
 {
-    public static int WIDTH = 800, HEIGHT = 600;
+    private static final ImGuiImplGlfw imGuiGlfw = new ImGuiImplGlfw();
+    private static final ImGuiImplGl3 imGui = new ImGuiImplGl3();
+    public static int WIDTH = 800, HEIGHT = 600, RENDER_DISTANCE = 16;
 
     private static OneSevenThree _instance;
 
     private long window;
+    public Transformation transformer;
     private World world;
-    private Shader currentShader;
+    private Shader activeShader;
     private ArrayList<Renderer> renderers;
-    private Transformation transform;
-    private Matrix4f projectionMatrix;
-    private float FOV = (float) Math.toRadians(70.0f);
-    private float Z_NEAR = 0.01f;
-    private float Z_FAR = 1000.f;
+    private ArrayList<ImGuiLayer> imGuiLayers;
+    private Matrix4f worldMatrix;
+    private Texture terrainTexture;
 
     public OneSevenThree()
     {
         _instance = this;
 
-        transform = new Transformation();
-        float aspectRatio = (float) WIDTH / HEIGHT;
-        projectionMatrix = new Matrix4f().perspective(FOV, aspectRatio, Z_NEAR, Z_FAR);
-
         world = new World();
         renderers = new ArrayList<>();
+        imGuiLayers = new ArrayList<>();
     }
 
     public void startGame()
     {
+        loadTextures();
+        Camera.init((float)WIDTH / HEIGHT);
+        Input.init(window);
+
+        transformer = new Transformation();
+        worldMatrix = new Matrix4f().identity();
+        setActiveShader(Shader.WORLD);
+        activeShader.createUniform("projectionMatrix");
+        activeShader.createUniform("worldMatrix");
+        activeShader.createUniform("viewMatrix");
+        activeShader.createUniform("texSampler");
+
         renderers.add(world);
+        imGuiLayers.add(new Debug());
         world.generateSomeChunks();
     }
 
     private void update()
     {
-        //
+        if (Camera.input())
+        {
+            Camera.update();
+        }
     }
 
     private void render()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
         glfwPollEvents();
-        glPushMatrix();
 
-        currentShader.bind();
-        Matrix4f projectionMatrix = transform.getProjectionMatrix(FOV, WIDTH, HEIGHT, Z_NEAR, Z_FAR);
-        currentShader.setUniform("projectionMatrix", projectionMatrix);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glTranslatef(0.0f, 0.0f, 0.0f);
+        glMatrixMode(GL_MODELVIEW);
 
         for (Renderer renderer : renderers)
             renderer.render();
 
-        currentShader.unbind();
-
-        glPopMatrix();
+        //glLoadIdentity();
         glfwSwapBuffers(window);
     }
 
     private void reshape(long window, int w, int h)
     {
-        glViewport(0, 0, w, h);
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
+//        glViewport(0, 0, w, h);
+//        glMatrixMode(GL_PROJECTION);
+//        glLoadIdentity();
+//
+//        glMatrixMode(GL_MODELVIEW);
+//        glLoadIdentity();
     }
 
     private void createWindow()
@@ -99,6 +131,8 @@ public class OneSevenThree implements Runnable
             System.exit(1);
             return;
         }
+
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // hide cursor
 
         glfwSetFramebufferSizeCallback(window, this::reshape);
         glfwSetKeyCallback(window, (window, key, scancode, action, mods) ->
@@ -120,12 +154,39 @@ public class OneSevenThree implements Runnable
         glfwSwapInterval(0);
         glfwShowWindow(window);
         initGL();
+        initImGui();
     }
 
     private void initGL()
     {
         GL.createCapabilities();
-        currentShader = new Shader("default");
+
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WIDTH, 0, HEIGHT, 1000, -1000);
+        glMatrixMode(GL_MODELVIEW);
+    }
+
+    private void initImGui()
+    {
+        ImGui.createContext();
+        ImGuiIO io = ImGui.getIO();
+        ImGui.styleColorsLight();
+        imGuiGlfw.init(window, true);
+        imGui.init("#version 330");
+    }
+
+    private void loadTextures()
+    {
+        try
+        {
+            PNGDecoder decoder = new PNGDecoder(getClass().getResourceAsStream("/textures/terrain.png"));
+            ByteBuffer buffer = ByteBuffer.allocateDirect(4 * decoder.getWidth() * decoder.getHeight());
+            terrainTexture = Texture.createTexture(decoder.getWidth(), decoder.getHeight(), buffer);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            System.exit(1);
+        }
     }
 
     public void run()
@@ -172,19 +233,29 @@ public class OneSevenThree implements Runnable
         return world;
     }
 
-    public Shader getCurrentShader()
+    public Shader getActiveShader()
     {
-        return currentShader;
+        return activeShader;
     }
 
-    public Transformation getTransform()
+    public void setActiveShader(Shader shader)
     {
-        return transform;
+        activeShader = shader;
+    }
+
+    public Matrix4f getWorldMatrix()
+    {
+        return worldMatrix;
     }
 
     public float onePixelSize()
     {
         return 2.0f / Math.min(WIDTH, HEIGHT);
+    }
+
+    public Texture getTerrainTexture()
+    {
+        return terrainTexture;
     }
 
     public static OneSevenThree getInstance()

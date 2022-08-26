@@ -125,13 +125,13 @@ public class Chunk
                 int z0 = Math.round(pos.z);
                 int z1 = Math.round(pos.z);
                 int xx = x1 - x0 + 1, zz = z1 - z0 + 1, yy = 1;
-                int red = 125, green = 60, blue = 75;
+                int red = 1, green = 0, blue = 0;
 
                 float[] vertices = AABB.SIDE.values[side].translate_and_expand(pos.x + x_offset, pos.y + y_offset, pos.z + z_offset, xx, yy, zz);
 
                 Integer index;
 
-                Vertex vertex0 = new Vertex(vertices[0], vertices[1], vertices[2], 0, 0, 0, 0, red, green, blue);
+                Vertex vertex0 = new Vertex(vertices[0], vertices[1], vertices[2], 0, 0, 16, 16, red, green, blue);
                 index = vertex2index.get(vertex0);
                 if (index == null)
                 {
@@ -141,7 +141,7 @@ public class Chunk
                 indices.add(index);
                 indices.add(vertex2index.get(vertex0));
 
-                Vertex vertex1 = new Vertex(vertices[3], vertices[4], vertices[5], 0, 0, 0, 0, red, green, blue);
+                Vertex vertex1 = new Vertex(vertices[3], vertices[4], vertices[5], 0, 0, 16, 16, red, green, blue);
                 index = vertex2index.get(vertex1);
                 if (index == null)
                 {
@@ -151,7 +151,7 @@ public class Chunk
                 indices.add(index);
                 indices.add(vertex2index.get(vertex1));
 
-                Vertex vertex2 = new Vertex(vertices[6], vertices[7], vertices[8], 0, 0, 0, 0, red, green, blue);
+                Vertex vertex2 = new Vertex(vertices[6], vertices[7], vertices[8], 0, 0, 16, 16, red, green, blue);
                 index = vertex2index.get(vertex2);
                 if (index == null)
                 {
@@ -161,7 +161,7 @@ public class Chunk
                 indices.add(index);
                 indices.add(vertex2index.get(vertex2));
 
-                Vertex vertex3 = new Vertex(vertices[9], vertices[10], vertices[11], 0, 0, 0, 0, red, green, blue);
+                Vertex vertex3 = new Vertex(vertices[9], vertices[10], vertices[11], 0, 0, 16, 16, red, green, blue);
                 index = vertex2index.get(vertex3);
                 if (index == null)
                 {
@@ -179,7 +179,6 @@ public class Chunk
         System.arraycopy(second, 0, both, first.length, second.length);
         return both;
     }
-
 
     private boolean checkIfBlockRender(Vector3f pos, boolean fluid)
     {
@@ -243,6 +242,11 @@ public class Chunk
     public Vector3i getPosition()
     {
         return position;
+    }
+
+    public Vector3f getPositionf()
+    {
+        return new Vector3f(position.x, position.y, position.z);
     }
 
     public IndexedMesh getMesh()

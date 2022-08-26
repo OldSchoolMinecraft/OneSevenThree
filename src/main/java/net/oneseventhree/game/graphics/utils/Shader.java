@@ -18,14 +18,20 @@ import static org.lwjgl.opengl.GL20.*;
 
 public class Shader
 {
+    public static Shader WORLD = new Shader("world");
+
+    private final String shader_name;
     public int program;
     public int vertex_shader;
     public int fragment_shader;
 
+    private final Map<String, Integer> uniforms;
     public Map<String, Integer> attributes;
 
     public Shader(String shader_name) {
+        this.shader_name = shader_name;
         this.program = glCreateProgram();
+        this.uniforms = new HashMap<>();
         this.attributes = new HashMap<>();
 
         attach_vertex_shader(shader_name + ".vs");
@@ -41,7 +47,10 @@ public class Shader
             System.err.println("Unable to link shader program:");
             System.err.println(glGetProgramInfoLog(program, glGetShaderi(fragment_shader, GL_INFO_LOG_LENGTH)));
             destroy();
+            return this;
         }
+
+        System.out.println("Shader compiled: " + shader_name);
 
         return this;
     }
@@ -66,37 +75,44 @@ public class Shader
         glDeleteProgram(program);
     }
 
+    public void createUniform(String uniformName)
+    {
+        int uniformLocation = glGetUniformLocation(program, uniformName);
+        if (uniformLocation < 0) throw new RuntimeException("Could not find uniform:" + uniformName);
+        uniforms.put(uniformName, uniformLocation);
+    }
+
     public void setUniform(String uniformName, Matrix4f value) {
         // Dump the matrix into a float buffer
         try (MemoryStack stack = MemoryStack.stackPush()) {
             FloatBuffer fb = stack.mallocFloat(16);
             value.get(fb);
-            glUniformMatrix4fv(glGetUniformLocation(program, uniformName), false, fb);
+            glUniformMatrix4fv(uniforms.get(uniformName), false, fb);
         }
     }
 
     public void set_uniform(String name, Matrix4f value) {
-        glUniformMatrix4fv(glGetUniformLocation(program, name), false, ExtendedBufferUtil.create_flipped_buffer(value));
+        glUniformMatrix4fv(uniforms.get(name), false, ExtendedBufferUtil.create_flipped_buffer(value));
     }
 
     public void set_uniform(String name, Vector2f value) {
-        glUniform2f(glGetUniformLocation(program, name), value.x, value.y);
+        glUniform2f(uniforms.get(name), value.x, value.y);
     }
 
     public void set_uniform(String name, Vector3f value) {
-        glUniform3f(glGetUniformLocation(program, name), value.x, value.y, value.z);
+        glUniform3f(uniforms.get(name), value.x, value.y, value.z);
     }
 
     public void set_uniform(String name, Vector4f value) {
-        glUniform4f(glGetUniformLocation(program, name), value.x, value.y, value.z, value.w);
+        glUniform4f(uniforms.get(name), value.x, value.y, value.z, value.w);
     }
 
     public void set_uniform(String name, float value) {
-        glUniform1f(glGetUniformLocation(program, name), value);
+        glUniform1f(uniforms.get(name), value);
     }
 
     public void set_uniform(String name, int value) {
-        glUniform1i(glGetUniformLocation(program, name), value);
+        glUniform1i(uniforms.get(name), value);
     }
 
     public Shader save_attr(String attr_name) {

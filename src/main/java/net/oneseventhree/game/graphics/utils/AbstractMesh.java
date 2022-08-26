@@ -110,7 +110,7 @@ public abstract class AbstractMesh {
     protected void init_vao() {
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-        Shader currentShader = OneSevenThree.getInstance().getCurrentShader();
+        Shader currentShader = OneSevenThree.getInstance().getActiveShader();
 
         int bytes = 0;
         if (currentShader.has_attr("attr_pos")) {
@@ -131,7 +131,7 @@ public abstract class AbstractMesh {
         }
 
         int bytes_offset = 0;
-        if (OneSevenThree.getInstance().getCurrentShader().has_attr("attr_pos")) {
+        if (OneSevenThree.getInstance().getActiveShader().has_attr("attr_pos")) {
             glVertexAttribPointer(currentShader.attr("attr_pos"), 3, GL_FLOAT, false, bytes, bytes_offset);
             bytes_offset += 12;
         }
