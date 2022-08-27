@@ -19,8 +19,7 @@ public class MathUtils
     public static Matrix4f createPerspectiveProjection(float fov, float aspect, float zNear, float zFar)
     {
         Matrix4f mat = new Matrix4f();
-        mat.identity();
-        mat.perspective(fov, aspect, zNear, zFar);
+        mat.setPerspective(fov, aspect, zNear, zFar);
         return mat;
     }
 

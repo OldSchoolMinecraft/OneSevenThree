@@ -1,5 +1,7 @@
 package net.oneseventhree.game.graphics.utils;
 
+import org.joml.Vector2f;
+
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL11.*;
@@ -59,6 +61,26 @@ public class Texture
     public void setHeight(int height)
     {
         if (height > 0) this.height = height;
+    }
+
+    public static float[] calcAtlasCoords(int textureIndex, int atlasSizeInBlocks)
+    {
+        float y = textureIndex / atlasSizeInBlocks;
+        float x = textureIndex - (y * atlasSizeInBlocks);
+
+        float normal = 1f / atlasSizeInBlocks;
+        y *= normal;
+        x *= normal;
+
+        y = 1f - y - normal;
+
+        return new float[]
+        {
+            x, y,
+            x, y + normal,
+            x + normal, y,
+            x + normal, y + normal
+        };
     }
 
     public static Texture createTexture(int width, int height, ByteBuffer data)

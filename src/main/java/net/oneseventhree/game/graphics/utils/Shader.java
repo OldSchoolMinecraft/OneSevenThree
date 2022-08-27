@@ -18,7 +18,7 @@ import static org.lwjgl.opengl.GL20.*;
 
 public class Shader
 {
-    public static Shader WORLD = new Shader("world");
+    public static Shader WORLD = new Shader("world").save_attrs("inVertexPosition", "inTextureCoord");
 
     private final String shader_name;
     public int program;

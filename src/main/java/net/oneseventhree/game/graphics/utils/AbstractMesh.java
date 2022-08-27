@@ -113,12 +113,12 @@ public abstract class AbstractMesh {
         Shader currentShader = OneSevenThree.getInstance().getActiveShader();
 
         int bytes = 0;
-        if (currentShader.has_attr("attr_pos")) {
-            glEnableVertexAttribArray(currentShader.attr("attr_pos"));
+        if (currentShader.has_attr("inVertexPosition")) {
+            glEnableVertexAttribArray(currentShader.attr("inVertexPosition"));
             bytes += 12;
         }
-        if (currentShader.has_attr("attr_tex_coord")) {
-            glEnableVertexAttribArray(currentShader.attr("attr_tex_coord"));
+        if (currentShader.has_attr("inTextureCoord")) {
+            glEnableVertexAttribArray(currentShader.attr("inTextureCoord"));
             bytes += 8;
         }
         if (currentShader.has_attr("attr_tex_offset")) {
@@ -131,12 +131,12 @@ public abstract class AbstractMesh {
         }
 
         int bytes_offset = 0;
-        if (OneSevenThree.getInstance().getActiveShader().has_attr("attr_pos")) {
-            glVertexAttribPointer(currentShader.attr("attr_pos"), 3, GL_FLOAT, false, bytes, bytes_offset);
+        if (OneSevenThree.getInstance().getActiveShader().has_attr("inVertexPosition")) {
+            glVertexAttribPointer(currentShader.attr("inVertexPosition"), 3, GL_FLOAT, false, bytes, bytes_offset);
             bytes_offset += 12;
         }
-        if (currentShader.has_attr("attr_tex_coord")) {
-            glVertexAttribPointer(currentShader.attr("attr_tex_coord"), 2, GL_FLOAT, false, bytes, bytes_offset);
+        if (currentShader.has_attr("inTextureCoord")) {
+            glVertexAttribPointer(currentShader.attr("inTextureCoord"), 2, GL_FLOAT, false, bytes, bytes_offset);
             bytes_offset += 8;
         }
         if (currentShader.has_attr("attr_tex_offset")) {

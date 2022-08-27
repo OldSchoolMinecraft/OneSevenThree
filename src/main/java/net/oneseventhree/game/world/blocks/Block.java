@@ -13,8 +13,8 @@ public class Block
     }
 
     public static Block air = new Block(0);
-    public static Block stone = new Block(1).setName("Stone");
-    public static Block grass = new Block(2).setName("Grass");
+    public static Block stone = new Block(1).setName("Stone").setAllTextures(1);
+    public static Block grass = new Block(2).setName("Grass").setTextureData(new int[] { 3, 42, 3, 2, 3, 3 });
     public static Block dirt = new Block(3).setName("Dirt");
     public static Block cobblestone = new Block(4).setName("Cobblestone");
     public static Block oakPlank = new Block(5).setName("Oak Wood Plank");
@@ -45,6 +45,13 @@ public class Block
         if (textureData.length != 6) throw new RuntimeException("Texture data must be an array with 6 integers.");
         for (int i = 0; i < this.textureData.length; i++)
             this.textureData[i] = textureData[i];
+        return this;
+    }
+
+    public Block setAllTextures(int textureIndex)
+    {
+        for (int i = 0; i < this.textureData.length; i++)
+            this.textureData[i] = textureIndex;
         return this;
     }
 

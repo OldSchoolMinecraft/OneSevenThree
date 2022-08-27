@@ -1,8 +1,10 @@
 package net.oneseventhree.game.world;
 
+import net.oneseventhree.game.OneSevenThree;
 import net.oneseventhree.game.graphics.Camera;
 import net.oneseventhree.game.graphics.render.Renderer;
 import net.oneseventhree.game.graphics.utils.Shader;
+import org.joml.Matrix4f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
@@ -11,6 +13,7 @@ import java.util.HashMap;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.*;
+import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 
 public class World extends Renderer
 {
@@ -42,27 +45,22 @@ public class World extends Renderer
     @Override
     public void render()
     {
-        game.setActiveShader(Shader.WORLD);
-        game.getActiveShader().bind();
+        Shader.WORLD.bind();
 
-        game.getActiveShader().setUniform("projectionMatrix", Camera.projection);
-        game.getActiveShader().setUniform("viewMatrix", Camera.view);
-        game.getActiveShader().set_uniform("texSampler", 0);
+        Shader.WORLD.set_uniform("projectionMatrix", Camera.projection);
+        Shader.WORLD.set_uniform("viewMatrix", Camera.view.identity());
+        Shader.WORLD.set_uniform("texSampler", 0);
 
-        //glColor3f(1f, 0f, 0f);
-
-        glActiveTexture(GL_TEXTURE0);
-        glEnable(GL_TEXTURE_2D);
         game.getTerrainTexture().bind();
 
-        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
         for (Chunk chunk : chunks.values())
         {
-            game.getActiveShader().setUniform("worldMatrix", game.transformer.getWorldMatrix(chunk.getPositionf(), new Vector3f(0, 0, 0), 1.0f));
+            Shader.WORLD.set_uniform("worldMatrix", game.transformer.getWorldMatrix(chunk.getPositionf(), new Vector3f(0, 0, 0), 1.0f));
+            glScalef(2f, 2f, 2f);
             chunk.getMesh().draw();
         }
 
-        game.getActiveShader().unbind();
+        Shader.WORLD.unbind();
         glDisable(GL_TEXTURE_2D);
     }
 }

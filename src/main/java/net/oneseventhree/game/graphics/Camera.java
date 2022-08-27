@@ -36,10 +36,10 @@ public class Camera
     {
         aspect = _aspect;
 
-        projection = MathUtils.createPerspectiveProjection(fov, aspect, 0.01f, z_far);
+        projection = MathUtils.createPerspectiveProjection(fov, aspect, -1f, z_far);
         view = MathUtils.createIdentityMatrix();
 
-        position = new Vector3f(0, 100, 0);
+        position = new Vector3f(0, 0, 0);
         rotation = new Vector3f(0, 0, 0);
 
         center = new Vector2f((float)OneSevenThree.WIDTH / 2, (float)OneSevenThree.HEIGHT / 2);

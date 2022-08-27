@@ -21,12 +21,14 @@ import net.oneseventhree.game.world.World;
 import org.joml.Matrix4f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 
@@ -89,31 +91,30 @@ public class OneSevenThree implements Runnable
 
     private void render()
     {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glViewport(0, 0, WIDTH, HEIGHT);
         glEnable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
+        glDisable(GL_BLEND);
+
         glfwPollEvents();
 
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glTranslatef(0.0f, 0.0f, 0.0f);
-        glMatrixMode(GL_MODELVIEW);
+        glColor3f(1f, 1f, 1f);
 
         for (Renderer renderer : renderers)
             renderer.render();
 
-        //glLoadIdentity();
         glfwSwapBuffers(window);
     }
 
     private void reshape(long window, int w, int h)
     {
-//        glViewport(0, 0, w, h);
-//        glMatrixMode(GL_PROJECTION);
-//        glLoadIdentity();
-//
-//        glMatrixMode(GL_MODELVIEW);
-//        glLoadIdentity();
+        glViewport(0, 0, w, h);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
     }
 
     private void createWindow()
@@ -164,6 +165,7 @@ public class OneSevenThree implements Runnable
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(0, WIDTH, 0, HEIGHT, 1000, -1000);
+        glViewport(0, 0, WIDTH, HEIGHT);
         glMatrixMode(GL_MODELVIEW);
     }
 
