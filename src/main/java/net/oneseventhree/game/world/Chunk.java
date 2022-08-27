@@ -26,6 +26,7 @@ public class Chunk
     private Vector3i position;
     private int x_offset, y_offset, z_offset;
 
+    private int vertexIndex = 0;
     private IndexedMesh mesh;
 
     private byte[][][] blocks;
@@ -77,11 +78,14 @@ public class Chunk
 
     private void generateMesh()
     {
-        if (mesh != null)
-        {
-            mesh.destroy();
-            mesh = new IndexedMesh();
-        }
+//        if (mesh != null)
+//        {
+//            //mesh.destroy();
+//            //mesh = new IndexedMesh();
+//        }
+
+        LinkedHashMap<Vertex, Integer> vertex2index = new LinkedHashMap<>();
+        ArrayList<Integer> indices = new ArrayList<>();
 
         for (int y = 0; y < CHUNK_HEIGHT; y++)
         {
@@ -94,10 +98,16 @@ public class Chunk
                     Block block = Block.blocks[getBlockAt(pos)];
                     if (block == null) continue;
                     if (block.isSolid())
-                        generateMeshData(new Vector3f(x, y, z));
+                    {
+                        ChunkMeshBroker broker = generateMeshData(new Vector3f(x, y, z));
+                        vertex2index.putAll(broker.vertex2index);
+                        indices.addAll(broker.indices);
+                    }
                 }
             }
         }
+
+        mesh.update_gl_data(vertex2index.keySet(), indices);
     }
 
     private boolean shouldRenderVoxel(Vector3f pos, boolean fluid)
@@ -107,10 +117,21 @@ public class Chunk
         return block.isSolid() && (block.isFluid() || fluid);
     }
 
-    private void generateMeshData(Vector3f pos)
+    private boolean logged = false;
+    private class ChunkMeshBroker
+    {
+        public LinkedHashMap<Vertex, Integer> vertex2index;
+        public ArrayList<Integer> indices;
+
+        public ChunkMeshBroker(LinkedHashMap<Vertex, Integer> vertex2index, ArrayList<Integer> indices)
+        {
+            this.vertex2index = vertex2index;
+            this.indices = indices;
+        }
+    }
+    private ChunkMeshBroker generateMeshData(Vector3f pos)
     {
         Block block = Block.getBlock(getBlockAt(pos));
-        int vertexIndex = 0;
         LinkedHashMap<Vertex, Integer> vertex2index = new LinkedHashMap<>();
         ArrayList<Integer> indices = new ArrayList<>();
 
@@ -172,7 +193,7 @@ public class Chunk
             }
         }
 
-        mesh.update_gl_data(vertex2index.keySet(), indices);
+        return new ChunkMeshBroker(vertex2index, indices); //mesh.update_gl_data(vertex2index.keySet(), indices);
     }
 
     static float[] f(float[] first, float[] second) {

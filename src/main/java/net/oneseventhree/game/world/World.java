@@ -1,19 +1,13 @@
 package net.oneseventhree.game.world;
 
-import net.oneseventhree.game.OneSevenThree;
 import net.oneseventhree.game.graphics.Camera;
 import net.oneseventhree.game.graphics.render.Renderer;
 import net.oneseventhree.game.graphics.utils.Shader;
-import org.joml.Matrix4f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
 import java.util.HashMap;
-
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL13.*;
-import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 
 public class World extends Renderer
 {
@@ -53,11 +47,9 @@ public class World extends Renderer
 
         game.getTerrainTexture().bind();
 
-        glEnable(GL_TEXTURE_2D);
-
         for (Chunk chunk : chunks.values())
         {
-            Shader.WORLD.set_uniform("worldMatrix", game.transformer.getWorldMatrix(chunk.getPositionf(), new Vector3f(0, 0, 0), 1.0f));
+            Shader.WORLD.set_uniform("worldMatrix", game.transformer.getWorldMatrix(chunk.getPositionf(), new Vector3f(0, 0, 0), 1f));
             chunk.getMesh().draw();
         }
 

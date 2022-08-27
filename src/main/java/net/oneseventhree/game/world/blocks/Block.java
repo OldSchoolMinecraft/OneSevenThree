@@ -12,18 +12,18 @@ public class Block
         return blocks[blockID];
     }
 
-    public static Block air = new Block(0);
+    public static Block air = new Block(0).setSolid(false);
     public static Block stone = new Block(1).setName("Stone").setAllTextures(1);
     public static Block grass = new Block(2).setName("Grass").setTextureData(new int[] { 3, 42, 3, 2, 3, 3 });
     public static Block dirt = new Block(3).setName("Dirt");
     public static Block cobblestone = new Block(4).setName("Cobblestone");
     public static Block oakPlank = new Block(5).setName("Oak Wood Plank");
-    public static Block oakSapling = new Block(6).setName("Oak Sapling");
+    public static Block oakSapling = new Block(6).setName("Oak Sapling").setSolid(false);
     public static Block bedrock = new Block(7).setName("Bedrock");
-    public static Block waterFlowing = new Block(8);
-    public static Block waterStill = new Block(9);
-    public static Block lavaFlowing = new Block(10);
-    public static Block lavaStill = new Block(11);
+    public static Block waterFlowing = new Block(8).setFluid(true);
+    public static Block waterStill = new Block(9).setFluid(true);
+    public static Block lavaFlowing = new Block(10).setFluid(true);
+    public static Block lavaStill = new Block(11).setFluid(true);
     public static Block sand = new Block(12).setName("Sand");
     public static Block gravel = new Block(13).setName("Gravel");
     public static Block goldOre = new Block(14).setName("Gold Ore");
@@ -32,6 +32,7 @@ public class Block
     private int[] textureData = new int[6];
     private String name = "Untitled Block";
     private boolean fluid = false;
+    private boolean solid = true;
 
     public Block(int blockID)
     {
@@ -67,9 +68,15 @@ public class Block
         return this;
     }
 
+    public Block setSolid(boolean flag)
+    {
+        solid = flag;
+        return this;
+    }
+
     public boolean isSolid()
     {
-        return !fluid;
+        return solid;
     }
 
     public boolean isFluid()

@@ -22,6 +22,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
@@ -43,6 +44,7 @@ public class OneSevenThree implements Runnable
     private static final ImGuiImplGlfw imGuiGlfw = new ImGuiImplGlfw();
     private static final ImGuiImplGl3 imGui = new ImGuiImplGl3();
     public static int WIDTH = 800, HEIGHT = 600, RENDER_DISTANCE = 16;
+    public static boolean IMGUI = false;
 
     private static OneSevenThree _instance;
 
@@ -94,17 +96,27 @@ public class OneSevenThree implements Runnable
 
     private void render()
     {
-        glClear(GL_COLOR_BUFFER_BIT);
-        glClear(GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, WIDTH, HEIGHT);
-        glClearColor(1f, 1f, 1f, 1f);
+        glClearColor(0f, 0f, 0f, 0f);
         glEnable(GL_DEPTH_TEST);
-        glDisable(GL_BLEND);
 
         glfwPollEvents();
 
         for (Renderer renderer : renderers)
             renderer.render();
+
+        if (IMGUI)
+        {
+            imGuiGlfw.newFrame();
+            ImGui.newFrame();
+
+            for (ImGuiLayer layer : imGuiLayers)
+                layer.draw();
+
+            ImGui.render();
+            imGui.renderDrawData(ImGui.getDrawData());
+        }
 
         glfwSwapBuffers(window);
     }
@@ -116,20 +128,21 @@ public class OneSevenThree implements Runnable
 
     private void createWindow()
     {
+        GLFWErrorCallback.createPrint(System.err).set();
+
         if (!glfwInit()) throw new RuntimeException("Failed to initialize GLFW");
 
+        glfwDefaultWindowHints();
         glfwWindowHint( GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE );
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
         window = glfwCreateWindow(WIDTH, HEIGHT, "OneSevenThree", 0, 0);
         if (window == 0)
-        {
-            glfwTerminate();
-            System.exit(1);
-            return;
-        }
+            throw new RuntimeException("Failed to initialize window");
 
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // hide cursor
 

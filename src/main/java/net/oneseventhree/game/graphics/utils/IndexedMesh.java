@@ -78,6 +78,7 @@ public class IndexedMesh extends AbstractMesh {
 
     public void draw() {
         glBindVertexArray(vao);
+        //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
         glDrawElements(GL_TRIANGLES, indices_counter, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
     }
