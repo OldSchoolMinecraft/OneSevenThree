@@ -53,14 +53,14 @@ public class World extends Renderer
 
         game.getTerrainTexture().bind();
 
+        glEnable(GL_TEXTURE_2D);
+
         for (Chunk chunk : chunks.values())
         {
             Shader.WORLD.set_uniform("worldMatrix", game.transformer.getWorldMatrix(chunk.getPositionf(), new Vector3f(0, 0, 0), 1.0f));
-            glScalef(2f, 2f, 2f);
             chunk.getMesh().draw();
         }
 
         Shader.WORLD.unbind();
-        glDisable(GL_TEXTURE_2D);
     }
 }

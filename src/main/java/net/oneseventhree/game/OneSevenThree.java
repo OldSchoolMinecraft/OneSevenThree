@@ -94,12 +94,11 @@ public class OneSevenThree implements Runnable
         glClear(GL_COLOR_BUFFER_BIT);
         glClear(GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, WIDTH, HEIGHT);
+        glClearColor(1f, 1f, 1f, 1f);
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
 
         glfwPollEvents();
-
-        glColor3f(1f, 1f, 1f);
 
         for (Renderer renderer : renderers)
             renderer.render();
@@ -110,11 +109,6 @@ public class OneSevenThree implements Runnable
     private void reshape(long window, int w, int h)
     {
         glViewport(0, 0, w, h);
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
     }
 
     private void createWindow()
@@ -124,6 +118,7 @@ public class OneSevenThree implements Runnable
         glfwDefaultWindowHints();
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
         window = glfwCreateWindow(WIDTH, HEIGHT, "OneSevenThree", 0, 0);
         if (window == 0)
@@ -162,11 +157,7 @@ public class OneSevenThree implements Runnable
     {
         GL.createCapabilities();
 
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0, WIDTH, 0, HEIGHT, 1000, -1000);
         glViewport(0, 0, WIDTH, HEIGHT);
-        glMatrixMode(GL_MODELVIEW);
     }
 
     private void initImGui()
