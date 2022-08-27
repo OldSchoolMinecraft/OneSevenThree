@@ -1,5 +1,7 @@
 package net.oneseventhree.game.world;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import net.oneseventhree.game.OneSevenThree;
 import net.oneseventhree.game.graphics.VoxelData;
 import net.oneseventhree.game.graphics.utils.AABB;
@@ -14,12 +16,17 @@ import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 
 public class Chunk
 {
+    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     public static final int CHUNK_WIDTH = 16, CHUNK_HEIGHT = 512, SIZE = 32;
 
     private Vector2i coords;
@@ -108,6 +115,15 @@ public class Chunk
         }
 
         mesh.update_gl_data(vertex2index.keySet(), indices);
+
+        String fileName = "chunk-" + coords.x + "." + coords.y + "-mesh.json";
+        if (new File(fileName).exists()) return;
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName)))
+        {
+            gson.toJson(vertex2index, writer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private boolean shouldRenderVoxel(Vector3f pos, boolean fluid)
@@ -137,21 +153,21 @@ public class Chunk
 
         for (int side = 0; side < 6; side++)
         {
-            if (!shouldRenderVoxel(pos.add(VoxelData.faceChecks[side]), block.isFluid()))
+            if (shouldRenderVoxel(pos.add(VoxelData.faceChecks[side]), block.isFluid()))
             {
                 int x0 = Math.round(pos.x);
                 int x1 = Math.round(pos.x);
                 int z0 = Math.round(pos.z);
                 int z1 = Math.round(pos.z);
                 int xx = x1 - x0 + 1, zz = z1 - z0 + 1, yy = 1;
-                int red = 25, green = 25, blue = 25;
+                int red = 255, green = 255, blue = 255;
 
                 float[] vertices = AABB.SIDE.values[side].translate_and_expand(pos.x + x_offset, pos.y + y_offset, pos.z + z_offset, xx, yy, zz);
                 float[] textures = Texture.calcAtlasCoords(block.getTextureIndex(side), 16);
 
                 Integer index;
 
-                Vertex vertex0 = new Vertex(vertices[0], vertices[1], vertices[2], textures[0], textures[1], textures[2], textures[3], red, green, blue);
+                Vertex vertex0 = new Vertex(vertices[0], vertices[1], vertices[2], 0, 0, 32, 32, red, green, blue);
                 index = vertex2index.get(vertex0);
                 if (index == null)
                 {
@@ -161,7 +177,7 @@ public class Chunk
                 indices.add(index);
                 indices.add(vertex2index.get(vertex0));
 
-                Vertex vertex1 = new Vertex(vertices[3], vertices[4], vertices[5], textures[0], textures[1], textures[2], textures[3], red, green, blue);
+                Vertex vertex1 = new Vertex(vertices[3], vertices[4], vertices[5], 0, 0, 32, 32, red, green, blue);
                 index = vertex2index.get(vertex1);
                 if (index == null)
                 {
@@ -171,7 +187,7 @@ public class Chunk
                 indices.add(index);
                 indices.add(vertex2index.get(vertex1));
 
-                Vertex vertex2 = new Vertex(vertices[6], vertices[7], vertices[8], textures[0], textures[1], textures[2], textures[3], red, green, blue);
+                Vertex vertex2 = new Vertex(vertices[6], vertices[7], vertices[8], 0, 0, 32, 32, red, green, blue);
                 index = vertex2index.get(vertex2);
                 if (index == null)
                 {
@@ -181,7 +197,7 @@ public class Chunk
                 indices.add(index);
                 indices.add(vertex2index.get(vertex2));
 
-                Vertex vertex3 = new Vertex(vertices[9], vertices[10], vertices[11], textures[0], textures[1], textures[2], textures[3], red, green, blue);
+                Vertex vertex3 = new Vertex(vertices[9], vertices[10], vertices[11], 0, 0, 32, 32, red, green, blue);
                 index = vertex2index.get(vertex3);
                 if (index == null)
                 {

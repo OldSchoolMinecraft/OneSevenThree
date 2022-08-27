@@ -26,6 +26,11 @@ public class Vertex
         this.color_b = color_b;
     }
 
+    public String toString()
+    {
+        return String.format("(%s, %s, %s)", pos_x, pos_y, pos_z);
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
