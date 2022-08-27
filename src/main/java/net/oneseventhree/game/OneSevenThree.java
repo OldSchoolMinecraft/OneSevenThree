@@ -25,6 +25,8 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GLUtil;
+import org.lwjgl.system.Callback;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.ByteBuffer;
@@ -52,6 +54,7 @@ public class OneSevenThree implements Runnable
     private ArrayList<ImGuiLayer> imGuiLayers;
     private Matrix4f worldMatrix;
     private Texture terrainTexture;
+    private Callback callback;
 
     public OneSevenThree()
     {
@@ -115,7 +118,7 @@ public class OneSevenThree implements Runnable
     {
         if (!glfwInit()) throw new RuntimeException("Failed to initialize GLFW");
 
-        glfwDefaultWindowHints();
+        glfwWindowHint( GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE );
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -156,6 +159,7 @@ public class OneSevenThree implements Runnable
     private void initGL()
     {
         GL.createCapabilities();
+        callback = GLUtil.setupDebugMessageCallback();
 
         glViewport(0, 0, WIDTH, HEIGHT);
     }
